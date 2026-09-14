@@ -7,6 +7,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    # यहाँ यह वेरिएबल जोड़ना सबसे जरूरी है जो Node 20 के एरर को बाईपास कर देगा
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout repository
