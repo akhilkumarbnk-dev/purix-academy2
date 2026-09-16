@@ -1,144 +1,209 @@
-// 2. class_selection_screen.dart
 import 'package:flutter/material.dart';
-import 'package:purix_academy/config/app_config.dart';
 import 'package:purix_academy/config/theme.dart';
+import 'package:purix_academy/config/app_config.dart';
 import 'package:purix_academy/services/auth_service.dart';
+import 'package:purix_academy/services/local_storage_service.dart';
 import 'package:purix_academy/screens/dashboard_screen.dart';
 
 class ClassSelectionScreen extends StatefulWidget {
-  const ClassSelectionScreen({Key? key}) : super(key: key);
-
   @override
   State<ClassSelectionScreen> createState() => _ClassSelectionScreenState();
 }
 
 class _ClassSelectionScreenState extends State<ClassSelectionScreen> {
   final _authService = AuthService();
-  bool _isLoading = false;
+  final _localStorageService = LocalStorageService();
   String? _selectedClass;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadCurrentClass();
+    _loadSelectedClass();
   }
 
-  Future<void> _loadCurrentClass() async {
-    final user = await _authService.getCurrentUser();
-    if (user != null && mounted) {
-      setState(() {
-        _selectedClass = user.selectedClass ?? AppConfig.CLASSES.first;
-      });
-    }
-  }
-
-  Future<void> _updateClass() async {
-    if (_selectedClass == null) return;
-
+  Future<void> _loadSelectedClass() async {
+    final user = await _localStorageService.getUser();
     setState(() {
-      _isLoading = true;
+      _selectedClass = user?.selectedClass ?? 'Class 8';
     });
+  }
 
-    final user = await _authService.getCurrentUser();
-    if (user != null && user.phone != null) {
+  Future<void> _handleClassSelection(String selectedClass) async {
+    setState(() => _isLoading = true);
+
+    final user = await _localStorageService.getUser();
+    if (user != null) {
       final result = await _authService.updateUserClass(
         phone: user.phone!,
-        newClass: _selectedClass!,
+        newClass: selectedClass,
       );
 
       if (result['success'] == true) {
-        if (!mounted) return;
+        setState(() => _selectedClass = selectedClass);
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          MaterialPageRoute(builder: (_) => DashboardScreen()),
         );
-        return;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update class')),
+        );
       }
     }
 
-    setState(() {
-      _isLoading = false;
-    });
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update class')),
-      );
-    }
+    setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Select Your Class'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Choose your study level',
-              style: AppTheme.headingMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'You can change this anytime from your profile.',
-              style: AppTheme.bodyMedium,
-            ),
-            const SizedBox(height: 32),
-            Expanded(
-              child: ListView.builder(
-                itemCount: AppConfig.CLASSES.length,
-                itemBuilder: (context, index) {
-                  final className = AppConfig.CLASSES[index];
-                  final isSelected = _selectedClass == className;
+      body: Container(
+        decoration: BoxDecoration(color: AppTheme.backgroundColor),
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.all(AppTheme.spacingL),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Header
+                Text(
+                  'SELECT YOUR CLASS',
+                  style: AppTheme.headingMedium.copyWith(
+                    color: AppTheme.primaryColor,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'Select your standard to personalize your learning dashboard.',
+                  style: AppTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 50),
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          .toString()
-                          .contains('true') // Selected styling
-                          ? AppTheme.surfaceColor
-                          : AppTheme.surfaceColor.withOpacity(0.5),
-                      border: Border.all(
-                        color: isSelected ? AppTheme.primaryColor : AppTheme.borderColor,
-                        width: isSelected ? 2 : 1,
+                // Class Cards
+                ...AppConfig.CLASSES.map((className) {
+                  bool isSelected = _selectedClass == className;
+                  return Column(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: isSelected
+                                ? AppTheme.primaryColor
+                                : AppTheme.borderColor,
+                            width: isSelected ? 2 : 1,
+                          ),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusLarge),
+                          color: isSelected
+                              ? AppTheme.surfaceColor.withOpacity(0.5)
+                              : AppTheme.surfaceColor,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: _isLoading
+                                ? null
+                                : () => _handleClassSelection(className),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusLarge),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: AppTheme.spacingL,
+                                vertical: AppTheme.spacingM,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        className,
+                                        style: AppTheme.headingSmall.copyWith(
+                                          color: isSelected
+                                              ? AppTheme.primaryColor
+                                              : AppTheme.textPrimaryColor,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        _getClassDescription(className),
+                                        style: AppTheme.bodySmall,
+                                      ),
+                                    ],
+                                  ),
+                                  if (isSelected)
+                                    Icon(
+                                      Icons.check_circle,
+                                      color: AppTheme.primaryColor,
+                                      size: 28,
+                                    )
+                                  else
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: AppTheme.textSecondaryColor,
+                                      size: 20,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                    ),
-                    child: ListTile(
-                      title: Text(
-                        className,
-                        style: AppTheme.headingSmall,
-                      ),
-                      trailing: isSelected
-                          ? const Icon(Icons.check_circle, color: AppTheme.primaryColor)
-                          : null,
-                      onTap: () {
-                        setState(() {
-                          _selectedClass = className;
-                        });
-                      },
-                    ),
+                      SizedBox(height: AppTheme.spacingM),
+                    ],
                   );
-                },
-              ),
+                }).toList(),
+
+                SizedBox(height: 30),
+
+                // Continue Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () => _handleClassSelection(_selectedClass!),
+                    child: _isLoading
+                        ? SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(
+                                AppTheme.backgroundColor,
+                              ),
+                            ),
+                          )
+                        : Text('CONTINUE'),
+                  ),
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _updateClass,
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Continue'),
-            ),
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  String _getClassDescription(String className) {
+    switch (className) {
+      case 'Class 8':
+        return 'Foundation, Concepts & Practice';
+      case 'Class 9':
+        return 'Pre-Board Core Concepts & Notes';
+      case 'Class 10':
+        return 'Board Exam Mastery, High-Yield Qs';
+      case 'Board Special':
+        return 'Target Crash Course, Formulas & Mock Tests';
+      default:
+        return '';
+    }
   }
 }

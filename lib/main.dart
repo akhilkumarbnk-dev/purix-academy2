@@ -1,39 +1,72 @@
 import 'package:flutter/material.dart';
-import 'package:purix_academy/config/app_config.dart';
 import 'package:purix_academy/config/theme.dart';
 import 'package:purix_academy/services/local_storage_service.dart';
 import 'package:purix_academy/screens/login_screen.dart';
 import 'package:purix_academy/screens/dashboard_screen.dart';
-import 'package:purix_academy/models/user_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize local storage service
+  // Initialize local storage
   final localStorageService = LocalStorageService();
   await localStorageService.initialize();
-
-  // Check existing login status from local storage
-  UserModel? user = await localStorageService.getUser();
-  bool isLoggedIn = user != null && user.phone != null && user.phone!.isNotEmpty;
-
-  runApp(PurixAcademyApp(isLoggedIn: isLoggedIn));
+  
+  runApp(const MyApp());
 }
 
-class PurixAcademyApp extends StatelessWidget {
-  final bool isLoggedIn;
-
-  const PurixAcademyApp({Key? key, required this.isLoggedIn}) : super(key: key);
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: AppConfig.appName,
+      title: 'Purix Academy',
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark,
-      darkTheme: AppTheme.darkTheme,
       theme: AppTheme.darkTheme,
-      home: isLoggedIn ? const DashboardScreen() : const LoginScreen(),
+      home: FutureBuilder(
+        future: _checkUserLoggedIn(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              body: Container(
+                color: AppTheme.backgroundColor,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'PURIX ACADEMY',
+                        style: AppTheme.headingMedium.copyWith(
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      CircularProgressIndicator(
+                        valueColor:
+                            AlwaysStoppedAnimation(AppTheme.primaryColor),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+
+          if (snapshot.hasData && snapshot.data == true) {
+            // User logged in, go to dashboard
+            return DashboardScreen();
+          } else {
+            // No user, go to login
+            return LoginScreen();
+          }
+        },
+      ),
     );
+  }
+
+  Future<bool> _checkUserLoggedIn() async {
+    final localStorageService = LocalStorageService();
+    final user = await localStorageService.getUser();
+    return user != null && user.phone != null && user.phone!.isNotEmpty;
   }
 }

@@ -1,23 +1,34 @@
 class AppConfig {
-  // App Name
-  static const String appName = 'Purix Academy';
-
-  // Google Apps Script Deployment URL
+  // ========== OFFICE DETAILS - यहाँ तुम्हारे office का data डालो ==========
+  
+  // Google Apps Script Deployment URL (Office का)
   static const String GOOGLE_APPS_SCRIPT_URL = 
-      'https://script.google.com/macros/s/AKfycbz5UuMCqBQ9xw0o3D7eDC3TLo47GJhgbpJLDCRFXh62969rziQImt_RgEOJS23BK_wJ/exec'; 
+      'https://script.google.com/macros/d/https://script.google.com/macros/s/AKfycbz5UuMCqBQ9xw0o3D7eDC3TLo47GJhgbpJLDCRFXh62969rziQImt_RgEOJS23BK_wJ/exec/userweb'; 
+  // ⬆️ इसे replace करो: YOUR_OFFICE_SCRIPT_ID को office की script ID से
 
-  // Google Sheets ID
+  // Office का Google Sheets ID
   static const String SPREADSHEET_ID = 
       '1wD4wbyETaQW_oAHsAWI58vAF_u-G4J1_2G3ratmq1Eo';
 
-  // Payment Details
+  // Office का Phone Number (WhatsApp के लिए)
+  static const String WHATSAPP_NUMBER = '9508774890';
+  // ⬆️ इसे replace करो: office का 10-digit number
+  
+  static const String WHATSAPP_URL = 'https://wa.me/919508774890';
+  // ⬆️ इसे replace करो: 91 + office number
+
+  // Office की UPI ID
   static const String UPI_ID = '6201161834@ptyes';
+  // ⬆️ इसे replace करो: office की UPI ID
+
+  // Payment
   static const String PRO_PASS_PRICE = '₹599';
   static const int PRO_PASS_VALIDITY_DAYS = 30;
 
-  // Contact Details
-  static const String WHATSAPP_NUMBER = '6201161834';
-  static const String WHATSAPP_URL = 'https://wa.me/916201161834';
+  // App Info (ये same रहेगी)
+  static const String APP_NAME = 'PURIX ACADEMY';
+  static const String APP_VERSION = '1.0.0';
+  static const String APP_TAGLINE = 'NEW WAY OF LEARNING';
 
   // Classes
   static const List<String> CLASSES = [
